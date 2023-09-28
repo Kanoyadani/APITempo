@@ -26,41 +26,58 @@ app.get("/:cidade/:uf", function (req, res) {
 app.post("/valid", async function (req, res) {
   const { cidade, uf } = req.body;
 
-  res.json(await getApi(await getId(cidade, uf)));
+  res.json(await getApi(await localizar(await getId(cidade, uf))));
 });
 
 app.listen(port, () => {
   console.log("Bem vindo ao Servidor! De o Post: /valid");
 });
 
+//Pega o Id da cidade
 async function getId(cidade, uf) {
   CITY = cidade;
   UF = uf;
+
   const response = await axios.get(
     `http://apiadvisor.climatempo.com.br/api/v1/locale/city?name=${CITY}&state=${UF}&token=7f6e57a075a74d3bae6d433bbe65e19f`
   );
   IdCidade = response?.data?.[0]?.id;
+
   console.log(IdCidade);
-  //console.log("De um Put no IdCidade!!!");
-  //localizar(IdCidade);
   return IdCidade;
 }
 
+//Ve a Previsão do tempo
 async function getApi(IdCidade) {
   let Id = IdCidade;
+
   const response = await axios.get(
     `http://apiadvisor.climatempo.com.br/api/v1/forecast/locale/${Id}/days/15?token=7f6e57a075a74d3bae6d433bbe65e19f`
   );
-  console.log(response.data);
+  return response.data;
 }
 
+//Localiza o Id da cidade em relção ao Token se não ele add
 async function localizar(IdCidade) {
-  let Idlocalizar = IdCidade;
-  //let i;
   const response = await axios.get(
     `http://apiadvisor.climatempo.com.br/api-manager/user-token/7f6e57a075a74d3bae6d433bbe65e19f/locales`
   );
-  if (response.data.find((element) => element.locales == Idlocalizar)) {
-    console.log("Achou");
+
+  for (item of response.data.locales) {
+    if (item === Number(IdCidade)) {
+      return IdCidade;
+    } else {
+      console.log(
+        "Use o Put: para adcionar a cidade, passando o Id da Cidade Que foi informado"
+      );
+
+      await axios.put(
+        `http://apiadvisor.climatempo.com.br/api-manager/user-token/7f6e57a075a74d3bae6d433bbe65e19f/locales`,
+        {
+          localeId: IdCidade,
+        }
+      );
+      return IdCidade;
+    }
   }
 }
