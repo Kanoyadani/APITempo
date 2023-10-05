@@ -6,27 +6,21 @@ var IdCidade;
 var CITY;
 var UF;
 
-//5959
-
 app.use(exepress.json());
 
-app.get("/:cidade/:uf", function (req, res) {
-  const { cidade, uf } = req.params;
-
-  res.json({ cidade, uf });
+app.get("/agenda", async function (req, res) {
+  res.json(await getAgenda());
 });
 
-/*app.get("/valid", function (req, res) {
-  const { cidade, uf } = req.query;
-
-  CITY = res.json({ cidade,uf });
-  
-});*/
+app.get("/news", async function (req, res) {
+  res.json(await getNews());
+});
 
 app.post("/valid", async function (req, res) {
   const { cidade, uf } = req.body;
 
   res.json(await getApi(await localizar(await getId(cidade, uf))));
+  //res.json(await localizar(await getId(cidade, uf)));
 });
 
 app.listen(port, () => {
@@ -80,4 +74,20 @@ async function localizar(IdCidade) {
       return IdCidade;
     }
   }
+}
+
+//Noticias
+async function getNews() {
+  const response = await axios.get(
+    "http://servicodados.ibge.gov.br/api/v3/noticias/?qtd=5"
+  );
+  return response.data;
+}
+
+//Agenda
+async function getAgenda() {
+  const response = await axios.get(
+    "https://servicodados.ibge.gov.br/api/v3/calendario/?qtd=3"
+  );
+  return response.data;
 }
